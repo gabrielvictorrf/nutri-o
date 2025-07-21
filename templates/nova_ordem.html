@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Ordem de Serviço - Sistema de OS{% endblock %}
+
+{% block header %}Nova Ordem de Serviço{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('listar_ordens') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus"></i> Criar Nova Ordem de Serviço
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('nova_ordem') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="numero" class="form-label">Número da OS *</label>
+                                <input type="text" class="form-control" id="numero" name="numero" required placeholder="Ex: OS-2024-001">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="prioridade" class="form-label">Prioridade *</label>
+                                <select class="form-select" id="prioridade" name="prioridade" required>
+                                    <option value="">Selecione a prioridade</option>
+                                    <option value="Baixa">Baixa</option>
+                                    <option value="Normal" selected>Normal</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição do Serviço *</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="4" required placeholder="Descreva detalhadamente o serviço a ser realizado..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="requisitante" class="form-label">Requisitante *</label>
+                                <input type="text" class="form-control" id="requisitante" name="requisitante" required placeholder="Nome do requisitante">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="setor_requisitante_id" class="form-label">Setor Requisitante *</label>
+                                <select class="form-select" id="setor_requisitante_id" name="setor_requisitante_id" required>
+                                    <option value="">Selecione o setor</option>
+                                    {% for setor in setores %}
+                                    <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maquina_id" class="form-label">Máquina (Opcional)</label>
+                                <select class="form-select" id="maquina_id" name="maquina_id">
+                                    <option value="">Selecione a máquina (se aplicável)</option>
+                                    {% for maquina in maquinas %}
+                                    <option value="{{ maquina.id }}">{{ maquina.nome }} ({{ maquina.codigo }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tempo_parada" class="form-label">Tempo de Parada (minutos)</label>
+                                <input type="number" class="form-control" id="tempo_parada" name="tempo_parada" min="0" value="0" placeholder="0">
+                                <div class="form-text">Tempo que a máquina ficou/ficará parada devido ao problema</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_ordens') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Criar Ordem de Serviço
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Informações
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Níveis de Prioridade:</h6>
+                <ul class="list-unstyled">
+                    <li><span class="badge bg-secondary">Baixa</span> - Serviços não urgentes</li>
+                    <li><span class="badge bg-primary">Normal</span> - Serviços rotineiros</li>
+                    <li><span class="badge bg-warning">Alta</span> - Serviços importantes</li>
+                    <li><span class="badge bg-danger">Urgente</span> - Parada de produção</li>
+                </ul>
+
+                <hr>
+
+                <h6>Dicas:</h6>
+                <ul class="small">
+                    <li>Use números sequenciais para as OS</li>
+                    <li>Seja específico na descrição</li>
+                    <li>Informe o tempo de parada se houver</li>
+                    <li>Selecione a máquina se o problema for específico</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line"></i> Estatísticas Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 mb-0">{{ setores|length }}</div>
+                        <small class="text-muted">Setores</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0">{{ maquinas|length }}</div>
+                        <small class="text-muted">Máquinas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-gerar número da OS baseado na data atual
+    document.addEventListener('DOMContentLoaded', function() {
+        const numeroInput = document.getElementById('numero');
+        if (numeroInput.value === '') {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            numeroInput.value = `OS-${year}${month}${day}-${hours}${minutes}`;
+        }
+
+        // Calcular tempo de parada em tempo real
+        const tempoInput = document.getElementById('tempo_parada');
+        tempoInput.addEventListener('input', function() {
+            const minutos = parseInt(this.value) || 0;
+            const horas = Math.floor(minutos / 60);
+            const minutosRestantes = minutos % 60;
+            
+            let texto = '';
+            if (horas > 0) {
+                texto = `${horas}h ${minutosRestantes}min`;
+            } else if (minutos > 0) {
+                texto = `${minutos} minutos`;
+            }
+            
+            // Atualizar texto de ajuda
+            const helpText = this.nextElementSibling;
+            if (texto) {
+                helpText.textContent = `Tempo que a máquina ficou/ficará parada: ${texto}`;
+            } else {
+                helpText.textContent = 'Tempo que a máquina ficou/ficará parada devido ao problema';
+            }
+        });
+    });
+
+    // Validação do formulário
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

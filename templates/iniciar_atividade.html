@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Atividade - OS {{ ordem.numero }}{% endblock %}
+
+{% block header %}Iniciar Atividade - OS {{ ordem.numero }}{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('detalhes_ordem', id=ordem.id) }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-play"></i> Nova Atividade
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('iniciar_atividade', ordem_id=ordem.id) }}">
+                    <div class="mb-3">
+                        <label for="trabalhador_id" class="form-label">Trabalhador Responsável *</label>
+                        <select class="form-select" id="trabalhador_id" name="trabalhador_id" required>
+                            <option value="">Selecione o trabalhador</option>
+                            {% for trabalhador in trabalhadores %}
+                            <option value="{{ trabalhador.id }}">
+                                {{ trabalhador.nome }} - {{ trabalhador.setor.nome }} ({{ trabalhador.cargo }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição da Atividade *</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="4" required 
+                                  placeholder="Descreva detalhadamente a atividade que será realizada..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Informação:</strong> A atividade será iniciada automaticamente no momento atual. 
+                        O trabalhador poderá finalizar a atividade posteriormente na tela de detalhes da ordem.
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('detalhes_ordem', id=ordem.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-play"></i> Iniciar Atividade
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Informações da Ordem -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Informações da Ordem
+                </h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td><strong>Número:</strong></td>
+                        <td>{{ ordem.numero }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>
+                            {% if ordem.status == 'Aberta' %}
+                                <span class="badge bg-warning">{{ ordem.status }}</span>
+                            {% elif ordem.status == 'Em Andamento' %}
+                                <span class="badge bg-info">{{ ordem.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Prioridade:</strong></td>
+                        <td>
+                            {% if ordem.prioridade == 'Urgente' %}
+                                <span class="badge bg-danger">{{ ordem.prioridade }}</span>
+                            {% elif ordem.prioridade == 'Alta' %}
+                                <span class="badge bg-warning">{{ ordem.prioridade }}</span>
+                            {% elif ordem.prioridade == 'Normal' %}
+                                <span class="badge bg-primary">{{ ordem.prioridade }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ ordem.prioridade }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Máquina:</strong></td>
+                        <td>
+                            {% if ordem.maquina %}
+                                {{ ordem.maquina.nome }}
+                            {% else %}
+                                <span class="text-muted">Não especificada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                
+                <hr>
+                
+                <h6><strong>Descrição:</strong></h6>
+                <p class="small text-muted">{{ ordem.descricao }}</p>
+            </div>
+        </div>
+
+        <!-- Trabalhadores por Setor -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-users"></i> Trabalhadores por Setor
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set setores_com_trabalhadores = trabalhadores|groupby('setor.nome') %}
+                {% for setor_nome, trabalhadores_setor in setores_com_trabalhadores %}
+                <div class="mb-3">
+                    <h6 class="text-primary">{{ setor_nome }}</h6>
+                    <ul class="list-unstyled small">
+                        {% for trabalhador in trabalhadores_setor %}
+                        <li>
+                            <i class="fas fa-user text-muted"></i> 
+                            {{ trabalhador.nome }}
+                            {% if trabalhador.cargo %}
+                                <small class="text-muted">({{ trabalhador.cargo }})</small>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validação do formulário
+        const form = document.querySelector('form');
+        const trabalhadorSelect = document.getElementById('trabalhador_id');
+        const descricaoTextarea = document.getElementById('descricao');
+
+        // Auto-focus no primeiro campo
+        trabalhadorSelect.focus();
+
+        // Sugestões de descrição baseadas na ordem
+        const sugestoes = [
+            'Análise inicial do problema',
+            'Diagnóstico da falha',
+            'Substituição de componente',
+            'Manutenção preventiva',
+            'Limpeza e lubrificação',
+            'Teste de funcionamento',
+            'Verificação de segurança',
+            'Documentação do serviço'
+        ];
+
+        // Adicionar sugestões como placeholder dinâmico
+        let sugestaoIndex = 0;
+        setInterval(function() {
+            if (descricaoTextarea.value === '') {
+                descricaoTextarea.placeholder = `Ex: ${sugestoes[sugestaoIndex]}...`;
+                sugestaoIndex = (sugestaoIndex + 1) % sugestoes.length;
+            }
+        }, 3000);
+
+        // Validação em tempo real
+        form.addEventListener('submit', function(e) {
+            let valid = true;
+            
+            if (!trabalhadorSelect.value) {
+                trabalhadorSelect.classList.add('is-invalid');
+                valid = false;
+            } else {
+                trabalhadorSelect.classList.remove('is-invalid');
+            }
+            
+            if (!descricaoTextarea.value.trim()) {
+                descricaoTextarea.classList.add('is-invalid');
+                valid = false;
+            } else {
+                descricaoTextarea.classList.remove('is-invalid');
+            }
+            
+            if (!valid) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+
+        // Remover validação ao digitar
+        trabalhadorSelect.addEventListener('change', function() {
+            this.classList.remove('is-invalid');
+        });
+        
+        descricaoTextarea.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+</script>
+{% endblock %}
