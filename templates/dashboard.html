@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Ordem de Serviços</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+        }
+
+        body {
+            background-color: var(--light-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #fff, #f8fafc);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+        }
+
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: var(--dark-color);
+            color: white;
+            font-weight: 500;
+            border: none;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--dark-color), #334155);
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            padding: 12px 20px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner-border {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-cogs me-2"></i>
+                Sistema OS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="atualizarDashboard()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Atualizar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <h6 class="text-light mb-3">Menu Principal</h6>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" onclick="mostrarSecao('dashboard')">
+                                    <i class="fas fa-tachometer-alt me-2"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="mostrarSecao('ordens')">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    Ordens de Serviço
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="mostrarSecao('trabalhadores')">
+                                    <i class="fas fa-users me-2"></i>
+                                    Trabalhadores
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="mostrarSecao('maquinas')">
+                                    <i class="fas fa-industry me-2"></i>
+                                    Máquinas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="mostrarSecao('relatorios')">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Relatórios
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo Principal -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Seção Dashboard -->
+                    <div id="secao-dashboard" class="secao">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fw-bold text-dark">Dashboard</h2>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="abrirModalNovaOS()">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Nova OS
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cards de Estatísticas -->
+                        <div class="row mb-4" id="cards-estatisticas">
+                            <!-- Cards serão preenchidos dinamicamente -->
+                        </div>
+
+                        <!-- Gráficos -->
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Tempo por Trabalhador</h5>
+                                    <div id="grafico-tempo-trabalhadores"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Tempo por Setor</h5>
+                                    <div id="grafico-tempo-setores"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Paradas por Máquina</h5>
+                                    <div id="grafico-paradas-maquinas"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Status das Ordens</h5>
+                                    <div id="grafico-status-ordens"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Ordens de Serviço -->
+                    <div id="secao-ordens" class="secao" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fw-bold text-dark">Ordens de Serviço</h2>
+                            <button class="btn btn-primary" onclick="abrirModalNovaOS()">
+                                <i class="fas fa-plus me-1"></i>
+                                Nova OS
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="tabela-ordens">
+                                        <thead>
+                                            <tr>
+                                                <th>Número OS</th>
+                                                <th>Título</th>
+                                                <th>Requisitante</th>
+                                                <th>Máquina</th>
+                                                <th>Status</th>
+                                                <th>Prioridade</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dados serão preenchidos dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Trabalhadores -->
+                    <div id="secao-trabalhadores" class="secao" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fw-bold text-dark">Trabalhadores</h2>
+                            <button class="btn btn-primary" onclick="abrirModalNovoTrabalhador()">
+                                <i class="fas fa-plus me-1"></i>
+                                Novo Trabalhador
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="tabela-trabalhadores">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Setor</th>
+                                                <th>Cargo</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dados serão preenchidos dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Máquinas -->
+                    <div id="secao-maquinas" class="secao" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fw-bold text-dark">Máquinas</h2>
+                            <button class="btn btn-primary" onclick="abrirModalNovaMaquina()">
+                                <i class="fas fa-plus me-1"></i>
+                                Nova Máquina
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="tabela-maquinas">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Código</th>
+                                                <th>Setor</th>
+                                                <th>Status</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dados serão preenchidos dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Relatórios -->
+                    <div id="secao-relatorios" class="secao" style="display: none;">
+                        <h2 class="fw-bold text-dark mb-4">Relatórios Detalhados</h2>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Produtividade por Trabalhador</h5>
+                                    <div id="relatorio-produtividade"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Eficiência por Setor</h5>
+                                    <div id="relatorio-eficiencia-setor"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Tempo Médio de Resolução</h5>
+                                    <div id="relatorio-tempo-resolucao"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova OS -->
+    <div class="modal fade" id="modalNovaOS" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Ordem de Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovaOS">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Título *</label>
+                                <input type="text" class="form-control" name="titulo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Requisitante *</label>
+                                <input type="text" class="form-control" name="requisitante" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Setor Requisitante</label>
+                                <input type="text" class="form-control" name="setor_requisitante">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Prioridade</label>
+                                <select class="form-select" name="prioridade">
+                                    <option value="Baixa">Baixa</option>
+                                    <option value="Normal" selected>Normal</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Máquina</label>
+                                <select class="form-select" name="maquina_id" id="select-maquinas">
+                                    <option value="">Selecione uma máquina</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tempo de Parada (horas)</label>
+                                <input type="number" class="form-control" name="tempo_parada_horas" step="0.1" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-control" name="descricao" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarNovaOS()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes OS -->
+    <div class="modal fade" id="modalDetalhesOS" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes da Ordem de Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="conteudo-detalhes-os">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Carregando dados...</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
