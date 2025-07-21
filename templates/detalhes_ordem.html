@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}OS {{ ordem.numero }} - Sistema de OS{% endblock %}
+
+{% block header %}Ordem de Serviço {{ ordem.numero }}{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group" role="group">
+    <a href="{{ url_for('listar_ordens') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+    {% if ordem.status == 'Aberta' %}
+    <a href="{{ url_for('iniciar_atividade', ordem_id=ordem.id) }}" class="btn btn-success">
+        <i class="fas fa-play"></i> Iniciar Atividade
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Informações da Ordem -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Informações da Ordem
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Número:</strong></td>
+                                <td>{{ ordem.numero }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if ordem.status == 'Aberta' %}
+                                        <span class="badge bg-warning fs-6">{{ ordem.status }}</span>
+                                    {% elif ordem.status == 'Em Andamento' %}
+                                        <span class="badge bg-info fs-6">{{ ordem.status }}</span>
+                                    {% elif ordem.status == 'Concluída' %}
+                                        <span class="badge bg-success fs-6">{{ ordem.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6">{{ ordem.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Prioridade:</strong></td>
+                                <td>
+                                    {% if ordem.prioridade == 'Urgente' %}
+                                        <span class="badge bg-danger fs-6">{{ ordem.prioridade }}</span>
+                                    {% elif ordem.prioridade == 'Alta' %}
+                                        <span class="badge bg-warning fs-6">{{ ordem.prioridade }}</span>
+                                    {% elif ordem.prioridade == 'Normal' %}
+                                        <span class="badge bg-primary fs-6">{{ ordem.prioridade }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6">{{ ordem.prioridade }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Requisitante:</strong></td>
+                                <td>{{ ordem.requisitante }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Setor:</strong></td>
+                                <td><span class="badge bg-secondary">{{ ordem.setor_requisitante.nome }}</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Máquina:</strong></td>
+                                <td>
+                                    {% if ordem.maquina %}
+                                        <span class="badge bg-info">{{ ordem.maquina.nome }}</span>
+                                        <br><small class="text-muted">{{ ordem.maquina.codigo }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Não especificada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tempo Parada:</strong></td>
+                                <td>
+                                    {% if ordem.tempo_parada > 0 %}
+                                        <span class="text-danger">
+                                            <i class="fas fa-clock"></i> {{ ordem.tempo_parada }} min
+                                            ({{ (ordem.tempo_parada / 60) | round(1) }}h)
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Sem parada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Abertura:</strong></td>
+                                <td>{{ ordem.data_abertura.strftime('%d/%m/%Y às %H:%M') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6><strong>Descrição do Serviço:</strong></h6>
+                        <p class="text-muted">{{ ordem.descricao }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atividades -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks"></i> Atividades
+                </h5>
+                {% if ordem.status in ['Aberta', 'Em Andamento'] %}
+                <a href="{{ url_for('iniciar_atividade', ordem_id=ordem.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Nova Atividade
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if ordem.atividades %}
+                    {% for atividade in ordem.atividades %}
+                    <div class="card mb-3 {% if atividade.status == 'Em Andamento' %}border-info{% elif atividade.status == 'Concluída' %}border-success{% endif %}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-user"></i> {{ atividade.trabalhador.nome }}
+                                        <small class="text-muted">({{ atividade.trabalhador.setor.nome }})</small>
+                                    </h6>
+                                    <p class="card-text">{{ atividade.descricao }}</p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    {% if atividade.status == 'Em Andamento' %}
+                                        <span class="badge bg-info mb-2">{{ atividade.status }}</span>
+                                        <br>
+                                        <a href="{{ url_for('finalizar_atividade', atividade_id=atividade.id) }}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Finalizar
+                                        </a>
+                                    {% elif atividade.status == 'Concluída' %}
+                                        <span class="badge bg-success mb-2">{{ atividade.status }}</span>
+                                        <br>
+                                        <span class="text-success">
+                                            <i class="fas fa-clock"></i> {{ atividade.tempo_gasto }} min
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-play"></i> Início: {{ atividade.data_inicio.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if atividade.data_fim %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-stop"></i> Fim: {{ atividade.data_fim.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-tasks fa-3x mb-3"></i>
+                        <p>Nenhuma atividade registrada ainda.</p>
+                        {% if ordem.status in ['Aberta', 'Em Andamento'] %}
+                        <a href="{{ url_for('iniciar_atividade', ordem_id=ordem.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Iniciar primeira atividade
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history"></i> Timeline
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Ordem Criada</h6>
+                            <p class="timeline-text">{{ ordem.data_abertura.strftime('%d/%m/%Y às %H:%M') }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if ordem.data_inicio %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Iniciada</h6>
+                            <p class="timeline-text">{{ ordem.data_inicio.strftime('%d/%m/%Y às %H:%M') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ordem.data_conclusao %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Concluída</h6>
+                            <p class="timeline-text">{{ ordem.data_conclusao.strftime('%d/%m/%Y às %H:%M') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-pie"></i> Estatísticas
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set total_atividades = ordem.atividades|length %}
+                {% set atividades_concluidas = ordem.atividades|selectattr('status', 'equalto', 'Concluída')|list|length %}
+                {% set tempo_total = ordem.atividades|sum(attribute='tempo_gasto') %}
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-primary">{{ total_atividades }}</div>
+                        <small class="text-muted">Atividades</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-success">{{ atividades_concluidas }}</div>
+                        <small class="text-muted">Concluídas</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-12">
+                        <div class="h4 mb-0 text-info">{{ tempo_total }} min</div>
+                        <small class="text-muted">Tempo Total Trabalhado</small>
+                    </div>
+                </div>
+                
+                {% if total_atividades > 0 %}
+                <div class="progress mt-3">
+                    <div class="progress-bar" role="progressbar" style="width: {{ (atividades_concluidas / total_atividades * 100) | round }}%">
+                        {{ (atividades_concluidas / total_atividades * 100) | round }}%
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -31px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.timeline-text {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

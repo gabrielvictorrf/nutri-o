@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de OS{% endblock %}
+
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Cards de Estatísticas -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Ordens
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_ordens }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats warning h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Ordens Abertas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ ordens_abertas }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats h-100" style="border-left-color: #17a2b8;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Em Andamento
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ ordens_andamento }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-cog fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stats success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Concluídas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ ordens_concluidas }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tempo de Parada -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock text-danger"></i> Tempo Total de Parada
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="display-4 text-danger">{{ tempo_total_parada }} min</div>
+                        <p class="text-muted">Tempo total de parada das máquinas</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="display-6">{{ (tempo_total_parada / 60) | round(1) }} h</div>
+                        <p class="text-muted">Equivalente em horas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Distribuição de Ordens por Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="chart-status" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Tempo Gasto por Trabalhador</h5>
+            </div>
+            <div class="card-body">
+                <div id="chart-tempo" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('nova_ordem') }}" class="btn btn-primary btn-block">
+                            <i class="fas fa-plus"></i> Nova Ordem de Serviço
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('listar_ordens') }}" class="btn btn-info btn-block">
+                            <i class="fas fa-list"></i> Ver Todas as Ordens
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('relatorios') }}" class="btn btn-success btn-block">
+                            <i class="fas fa-chart-bar"></i> Relatórios
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('configuracoes') }}" class="btn btn-secondary btn-block">
+                            <i class="fas fa-cog"></i> Configurações
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Gráfico de Status das Ordens
+    var graphStatus = {{ graphJSON_status|safe }};
+    Plotly.plot('chart-status', graphStatus.data, graphStatus.layout, {responsive: true});
+
+    // Gráfico de Tempo por Trabalhador
+    var graphTempo = {{ graphJSON_tempo|safe }};
+    if (graphTempo.data && graphTempo.data.length > 0) {
+        Plotly.plot('chart-tempo', graphTempo.data, graphTempo.layout, {responsive: true});
+    } else {
+        document.getElementById('chart-tempo').innerHTML = '<div class="text-center text-muted p-4">Nenhum dado disponível</div>';
+    }
+
+    // Atualizar dashboard a cada 30 segundos
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Sistema de OS{% endblock %}
+
+{% block header %}Relatórios{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Relatório de Produtividade por Trabalhador -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-clock"></i> Produtividade por Trabalhador
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if trabalhadores_stats %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Trabalhador</th>
+                                <th>Setor</th>
+                                <th>Total de Atividades</th>
+                                <th>Tempo Total (min)</th>
+                                <th>Tempo Total (horas)</th>
+                                <th>Tempo Médio por Atividade</th>
+                                <th>Produtividade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stats in trabalhadores_stats %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-user text-primary"></i>
+                                    <strong>{{ stats[0] }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ stats[1] }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ stats[2] }} atividades</span>
+                                </td>
+                                <td>
+                                    <span class="text-primary">{{ stats[3] or 0 }} min</span>
+                                </td>
+                                <td>
+                                    <span class="text-success">{{ ((stats[3] or 0) / 60) | round(1) }}h</span>
+                                </td>
+                                <td>
+                                    <span class="text-warning">{{ (stats[4] or 0) | round(1) }} min/atividade</span>
+                                </td>
+                                <td>
+                                    {% set produtividade = (stats[2] / ((stats[3] or 1) / 60)) | round(2) %}
+                                    {% if produtividade > 2 %}
+                                        <span class="badge bg-success">Alta ({{ produtividade }})</span>
+                                    {% elif produtividade > 1 %}
+                                        <span class="badge bg-warning">Média ({{ produtividade }})</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Baixa ({{ produtividade }})</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <p>Nenhuma atividade registrada ainda para gerar relatórios.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Relatório de Tempo de Parada por Máquina -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Tempo de Parada por Máquina
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if maquinas_parada %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Máquina</th>
+                                <th>Código</th>
+                                <th>Setor</th>
+                                <th>Tempo Total Parada (min)</th>
+                                <th>Tempo Total Parada (horas)</th>
+                                <th>Total de Ordens</th>
+                                <th>Média por Ordem</th>
+                                <th>Impacto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for maquina in maquinas_parada %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-cog text-info"></i>
+                                    <strong>{{ maquina[0] }}</strong>
+                                </td>
+                                <td>
+                                    <code>{{ maquina[1] }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ maquina[2] }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-danger">
+                                        <i class="fas fa-clock"></i> {{ maquina[3] or 0 }} min
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-danger">{{ ((maquina[3] or 0) / 60) | round(1) }}h</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ maquina[4] }} ordens</span>
+                                </td>
+                                <td>
+                                    <span class="text-warning">{{ ((maquina[3] or 0) / (maquina[4] or 1)) | round(1) }} min/ordem</span>
+                                </td>
+                                <td>
+                                    {% set tempo_parada = maquina[3] or 0 %}
+                                    {% if tempo_parada > 480 %}
+                                        <span class="badge bg-danger">Crítico</span>
+                                    {% elif tempo_parada > 240 %}
+                                        <span class="badge bg-warning">Alto</span>
+                                    {% elif tempo_parada > 60 %}
+                                        <span class="badge bg-info">Médio</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Baixo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-cogs fa-3x mb-3"></i>
+                    <p>Nenhuma máquina com tempo de parada registrado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Resumo Executivo -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-chart-pie"></i> Resumo de Produtividade
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if trabalhadores_stats %}
+                        {% set total_atividades = trabalhadores_stats | sum(attribute='2') %}
+                        {% set total_tempo = trabalhadores_stats | sum(attribute='3') %}
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="h3 mb-0 text-primary">{{ total_atividades }}</div>
+                                <small class="text-muted">Total Atividades</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="h3 mb-0 text-success">{{ (total_tempo / 60) | round(1) }}h</div>
+                                <small class="text-muted">Total Horas</small>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <div class="h4 mb-0 text-info">{{ trabalhadores_stats | length }}</div>
+                                <small class="text-muted">Trabalhadores Ativos</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <p>Sem dados para exibir</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-exclamation-triangle text-danger"></i> Resumo de Paradas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if maquinas_parada %}
+                        {% set total_parada = maquinas_parada | sum(attribute='3') %}
+                        {% set total_ordens_parada = maquinas_parada | sum(attribute='4') %}
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="h3 mb-0 text-danger">{{ total_parada }}min</div>
+                                <small class="text-muted">Total Parada</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="h3 mb-0 text-warning">{{ (total_parada / 60) | round(1) }}h</div>
+                                <small class="text-muted">Em Horas</small>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <div class="h4 mb-0 text-info">{{ maquinas_parada | length }}</div>
+                                <small class="text-muted">Máquinas Afetadas</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <p>Sem dados para exibir</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicadores de Performance -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tachometer-alt"></i> Indicadores de Performance (KPIs)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if trabalhadores_stats and maquinas_parada %}
+                    {% set total_tempo_trabalho = trabalhadores_stats | sum(attribute='3') %}
+                    {% set total_tempo_parada = maquinas_parada | sum(attribute='3') %}
+                    {% set eficiencia = (total_tempo_trabalho / (total_tempo_trabalho + total_tempo_parada) * 100) if (total_tempo_trabalho + total_tempo_parada) > 0 else 0 %}
+                    
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h2 mb-0 {% if eficiencia > 80 %}text-success{% elif eficiencia > 60 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ eficiencia | round(1) }}%
+                            </div>
+                            <small class="text-muted">Eficiência Operacional</small>
+                            <div class="progress mt-2">
+                                <div class="progress-bar {% if eficiencia > 80 %}bg-success{% elif eficiencia > 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ eficiencia }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if trabalhadores_stats %}
+                    {% set media_atividades = (trabalhadores_stats | sum(attribute='2') / trabalhadores_stats | length) if trabalhadores_stats else 0 %}
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-primary">{{ media_atividades | round(1) }}</div>
+                            <small class="text-muted">Atividades/Trabalhador</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if maquinas_parada %}
+                    {% set mttr = (maquinas_parada | sum(attribute='3') / maquinas_parada | sum(attribute='4')) if maquinas_parada | sum(attribute='4') > 0 else 0 %}
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-warning">{{ mttr | round(1) }}min</div>
+                            <small class="text-muted">MTTR (Tempo Médio Reparo)</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h2 mb-0 text-info">{{ (trabalhadores_stats | length) if trabalhadores_stats else 0 }}</div>
+                            <small class="text-muted">Equipe Ativa</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Adicionar funcionalidade de exportação de dados
+    function exportarRelatorio() {
+        // Implementar exportação para CSV ou PDF
+        alert('Funcionalidade de exportação em desenvolvimento');
+    }
+    
+    // Atualizar relatórios automaticamente
+    setInterval(function() {
+        // Pode implementar atualização automática dos dados
+    }, 60000); // A cada minuto
+</script>
+{% endblock %}

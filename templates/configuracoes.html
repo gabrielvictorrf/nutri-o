@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - Sistema de OS{% endblock %}
+
+{% block header %}Configurações do Sistema{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Navigation tabs -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Categorias
+                </h6>
+            </div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action active" data-bs-toggle="tab" href="#setores-tab">
+                    <i class="fas fa-building"></i> Setores
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="tab" href="#trabalhadores-tab">
+                    <i class="fas fa-users"></i> Trabalhadores
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="tab" href="#maquinas-tab">
+                    <i class="fas fa-cogs"></i> Máquinas
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="tab" href="#sistema-tab">
+                    <i class="fas fa-cog"></i> Sistema
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="tab-content">
+            <!-- Setores -->
+            <div class="tab-pane fade show active" id="setores-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-building"></i> Gerenciar Setores
+                        </h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novoSetorModal">
+                            <i class="fas fa-plus"></i> Novo Setor
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {% if setores %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Trabalhadores</th>
+                                        <th>Máquinas</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for setor in setores %}
+                                    <tr>
+                                        <td><strong>{{ setor.nome }}</strong></td>
+                                        <td class="text-muted">{{ setor.descricao or '-' }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ setor.trabalhadores|length }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ setor.maquinas|length }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-building fa-3x mb-3"></i>
+                            <p>Nenhum setor cadastrado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trabalhadores -->
+            <div class="tab-pane fade" id="trabalhadores-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users"></i> Gerenciar Trabalhadores
+                        </h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novoTrabalhadorModal">
+                            <i class="fas fa-plus"></i> Novo Trabalhador
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {% if trabalhadores %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Setor</th>
+                                        <th>Cargo</th>
+                                        <th>Atividades</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trabalhador in trabalhadores %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-user text-primary"></i>
+                                            <strong>{{ trabalhador.nome }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ trabalhador.setor.nome }}</span>
+                                        </td>
+                                        <td class="text-muted">{{ trabalhador.cargo or '-' }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ trabalhador.atividades|length }}</span>
+                                        </td>
+                                        <td>
+                                            {% set atividade_ativa = trabalhador.atividades|selectattr('status', 'equalto', 'Em Andamento')|list %}
+                                            {% if atividade_ativa %}
+                                                <span class="badge bg-success">Trabalhando</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Disponível</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-info" title="Ver Atividades">
+                                                    <i class="fas fa-tasks"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <p>Nenhum trabalhador cadastrado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Máquinas -->
+            <div class="tab-pane fade" id="maquinas-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cogs"></i> Gerenciar Máquinas
+                        </h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novaMaquinaModal">
+                            <i class="fas fa-plus"></i> Nova Máquina
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {% if maquinas %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Código</th>
+                                        <th>Setor</th>
+                                        <th>Status</th>
+                                        <th>Ordens</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for maquina in maquinas %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-cog text-info"></i>
+                                            <strong>{{ maquina.nome }}</strong>
+                                        </td>
+                                        <td>
+                                            <code>{{ maquina.codigo }}</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ maquina.setor.nome }}</span>
+                                        </td>
+                                        <td>
+                                            {% if maquina.status == 'Ativa' %}
+                                                <span class="badge bg-success">{{ maquina.status }}</span>
+                                            {% elif maquina.status == 'Parada' %}
+                                                <span class="badge bg-danger">{{ maquina.status }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ maquina.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ maquina.ordens_servico|length }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-info" title="Ver Ordens">
+                                                    <i class="fas fa-list"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-cogs fa-3x mb-3"></i>
+                            <p>Nenhuma máquina cadastrada.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sistema -->
+            <div class="tab-pane fade" id="sistema-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog"></i> Configurações do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome da Empresa</label>
+                                        <input type="text" class="form-control" value="Empresa XYZ">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Fuso Horário</label>
+                                        <select class="form-select">
+                                            <option selected>America/Sao_Paulo</option>
+                                            <option>America/New_York</option>
+                                            <option>Europe/London</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Intervalo de Atualização (segundos)</label>
+                                        <input type="number" class="form-control" value="30" min="10" max="300">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Backup Automático</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Ativar backup automático</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h6>Notificações</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">Notificar ordens urgentes</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">Notificar tempo de parada alto</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Configurações
+                                </button>
+                                <button type="button" class="btn btn-secondary ms-2">
+                                    <i class="fas fa-undo"></i> Restaurar Padrões
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> Informações do Sistema
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Versão:</strong></td>
+                                        <td>1.0.0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Banco de Dados:</strong></td>
+                                        <td>SQLite</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Última Atualização:</strong></td>
+                                        <td>{{ moment().format('DD/MM/YYYY HH:mm') }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Total Ordens:</strong></td>
+                                        <td><span class="badge bg-primary">{{ setores|length + trabalhadores|length + maquinas|length }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Usuários Ativos:</strong></td>
+                                        <td><span class="badge bg-success">1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td><span class="badge bg-success">Online</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais para adicionar novos itens -->
+<!-- Modal Novo Setor -->
+<div class="modal fade" id="novoSetorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Setor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Setor *</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Trabalhador -->
+<div class="modal fade" id="novoTrabalhadorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Trabalhador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome *</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Setor *</label>
+                        <select class="form-select" required>
+                            <option value="">Selecione o setor</option>
+                            {% for setor in setores %}
+                            <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Máquina -->
+<div class="modal fade" id="novaMaquinaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Máquina</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Máquina *</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Código *</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Setor *</label>
+                        <select class="form-select" required>
+                            <option value="">Selecione o setor</option>
+                            {% for setor in setores %}
+                            <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select">
+                            <option value="Ativa" selected>Ativa</option>
+                            <option value="Parada">Parada</option>
+                            <option value="Manutenção">Manutenção</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Funcionalidade dos modais e tabs
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ativar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}
